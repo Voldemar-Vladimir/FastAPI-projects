@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Бронирование</title>
+</head>
+<body>
+    <h1>Бронирование</h1>
+    <form action="/booking" method="post">
+        <input type="hidden" name="home_id" value="{{ home_id }}">
+        <label>Заезд: <input type="date" name="check_in" required></label><br>
+        <label>Выезд: <input type="date" name="check_out" required></label><br>
+        <label>Имя: <input type="text" name="name" required></label><br>
+        <label>Телефон: <input type="tel" name="phone" required></label><br>
+        <label>Email: <input type="email" name="email"></label><br>
+        <br>
+        <label><input type="checkbox" name="mini_bar"> Мини-бар 4000₽</label><br>
+        <label><input type="checkbox" name="massage"> Массаж 2000₽</label><br>
+        <label><input type="checkbox" name="wifi"> Интернет 350₽</label><br>
+        <label><input type="checkbox" name="tv"> Телевизор 500₽</label><br>
+        <label><input type="checkbox" name="transfer"> Трансфер 1000₽</label><br>
+        <button type="submit">Забронировать</button>
+    </form>
+</body>
+</html>

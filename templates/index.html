@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест</title>
+</head>
+<body>
+    <h1>Сайт работает!</h1>
+    <p>Всего домов: {{ homes|length }}</p>
+    <ul>
+    {% for home in homes %}
+        <li>Домик номер {{ home['id'] }} стоит {{ home['price_per_day'] }} рублей в сутки</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
