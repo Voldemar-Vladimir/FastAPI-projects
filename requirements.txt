@@ -2,5 +2,6 @@ fastapi
 uvicorn
 sqlalchemy
 jinja2
+mako
 python-multipart
 aiofiles
