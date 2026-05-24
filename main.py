@@ -1,5 +1,7 @@
 import uvicorn
 import datetime
+from Admin_Info import admin_info
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
@@ -9,6 +11,10 @@ from fastapi import FastAPI, HTTPException, Form, Depends, Request
 from pydantic import BaseModel, Field
 from mako.lookup import TemplateLookup
 import requests
+
+admin_name, admin_password = admin_info()
+
+security = HTTPBasic()
 
 def get_db():
     db = SessionLocal()
@@ -31,11 +37,6 @@ homes = [
      "img_room": ["/static/img/home2_room1.png", "/static/img/home2_room2.png"],
      "tv": True, "wifi": True, "batut": True, "rating": 4.89}
 ]
-
-class User(BaseModel):
-    name: str
-    age: int = Field(ge=0, le=130)
-    tell: int
 
 @app.get("/")
 def root(request: Request):
@@ -118,5 +119,17 @@ def RostovHomes(message):
     try:
         requests.post(url, json=data, timeout=5)
     except:pass
+
+@app.get("/admin")
+def admin(db: Session = Depends(get_db),credentials: HTTPBasicCredentials = Depends(security)):
+    bookings = db.query(Booking).order_by(Booking.created_at.desc()).all()
+    if credentials.username==admin_name and credentials.password==admin_password:
+        template = template_lookup.get_template("admin.html")
+        return HTMLResponse(template.render(
+            bookings=bookings
+        ))
+    else:
+        raise HTTPException(status_code=401, detail="Неверный логин или пароль")
+
 if __name__ == "__main__":
     uvicorn.run(app)

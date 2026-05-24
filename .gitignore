@@ -2,3 +2,4 @@ venv/
 .venv/
 __pycache__/
 *.db
+Admin_Info.py
