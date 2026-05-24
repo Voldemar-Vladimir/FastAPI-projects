@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field
 from mako.lookup import TemplateLookup
 import requests
 
-admin_name, admin_password = admin_info()
+admin_name, admin_password = admin_info()[0]
+admin_name1, admin_password1 = admin_info()[1]
 
 security = HTTPBasic()
 
@@ -123,7 +124,7 @@ def RostovHomes(message):
 @app.get("/admin")
 def admin(db: Session = Depends(get_db),credentials: HTTPBasicCredentials = Depends(security)):
     bookings = db.query(Booking).order_by(Booking.created_at.desc()).all()
-    if credentials.username==admin_name and credentials.password==admin_password:
+    if (credentials.username==admin_name and credentials.password==admin_password) or (credentials.username==admin_name1 and credentials.password==admin_password1):
         template = template_lookup.get_template("admin.html")
         return HTMLResponse(template.render(
             bookings=bookings
