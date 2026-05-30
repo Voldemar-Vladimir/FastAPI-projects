@@ -62,7 +62,6 @@ def create_form(
     if days < 2:
         raise HTTPException(400, "Минимальная длительность — 2 дня")
 
-    # Ищем дом
     home = next((h for h in homes if h["id"] == home_id), None)
     if not home:
         raise HTTPException(404, "Дом не найден")
@@ -84,18 +83,20 @@ def create_form(
         transfer=transfer,
         total_price=price,
         peoples=peoples
-        # city больше не сохраняем
     )
     db.add(booking)
     db.commit()
     message = f"Новый заказ!\nДом №{home_id}\nИмя: {name}\nТелефон: {phone}\nДаты: {check_in} – {check_out}\nГостей: {peoples}\nСумма: {price}₽"
     RostovHomes(message)
-    return RedirectResponse(url="/success", status_code=303)
+    return RedirectResponse(url=f"/success?booking_id={booking.id}", status_code=303)
 
 @app.get("/success")
-def success():
+def success(booking_id: int = None, db: Session = Depends(get_db)):
+    all = db.query(Booking).get(booking_id) if booking_id else None
     template = template_lookup.get_template("success.html")
-    return HTMLResponse(template.render())
+    if not all:
+        return HTMLResponse(template.render(all=None))
+    return HTMLResponse(template.render(all=all))
 
 @app.get("/booking")
 def show_booking_form(request: Request, home_id: int = None):
@@ -158,6 +159,14 @@ def login_check(pin: str = Form(...)):
         return RedirectResponse(url=f"/admin/{secret_key}", status_code=303)
     else:
         return RedirectResponse(url="/login", status_code=303)
+
+@app.get("/track")
+def track(booking_id: int = None, db: Session = Depends(get_db)):
+    all = db.query(Booking).get(booking_id) if booking_id else None
+    if not all:
+        raise HTTPException(404)
+    template = template_lookup.get_template("track.html")
+    return HTMLResponse(template.render(all=all))
 
 if __name__ == "__main__":
     uvicorn.run(app)

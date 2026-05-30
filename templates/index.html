@@ -16,17 +16,9 @@
         <a class="navbar-brand fw-bold" href="/">
             🏖️ Домики у моря
         </a>
-            <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
-            <div class="container">
-        <a class="navbar-brand fw-bold" href="/">
-            🏖️ Домики у моря
-        </a>
-        <!-- 🔹 Вот она, безопасная кнопка -->
         <a href="/login" class="btn btn-outline-info btn-sm rounded-pill">
-    🔑 Все заявки
+            🔑 для админов
         </a>
-    </div>
-</nav>
     </div>
 </nav>
 
@@ -72,6 +64,15 @@
         </div>
         % endfor
     </div>
+</div>
+
+<!-- 🔍 Проверка статуса заказа -->
+<div class="container py-4 text-center">
+    <h5><i class="bi bi-search"></i> Проверить статус заказа</h5>
+    <form action="/track" method="get" class="d-flex justify-content-center mt-2">
+        <input type="text" name="booking_id" class="form-control w-auto me-2" placeholder="Номер заказа" required>
+        <button type="submit" class="btn btn-outline-primary rounded-pill"><i class="bi bi-arrow-right-circle"></i> Проверить</button>
+    </form>
 </div>
 
 <footer class="text-center py-4 mt-5">
