@@ -3,33 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💬 Поддержка</title>
+    <title>Поддержка</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-<div class="container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="col-12 col-md-6">
-        <div class="card shadow">
-            <div class="card-body text-center">
-                <i class="bi bi-headset display-1 text-primary mb-3"></i>
-                <h3>Нужна помощь?</h3>
-                <p class="lead">Опишите ваш вопрос, и мы ответим в ближайшее время.</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+                <h2 class="text-center mb-4"><i class="bi bi-headset"></i> Служба поддержки</h2>
+                <p class="text-center">Опишите вашу проблему или вопрос, мы ответим в ближайшее время.</p>
                 <form action="/support" method="post">
                     <div class="mb-3">
                         <input type="text" name="name" class="form-control form-control-lg" placeholder="Ваше имя" required>
                     </div>
                     <div class="mb-3">
-                        <input type="text" name="contact" class="form-control form-control-lg" placeholder="Телефон или Email" required>
+                        <input type="text" name="contact" class="form-control form-control-lg" placeholder="Телефон или Telegram" required>
                     </div>
                     <div class="mb-3">
-                        <textarea name="message" class="form-control form-control-lg" rows="4" placeholder="Ваш вопрос..." required></textarea>
+                        <textarea name="message" rows="5" class="form-control form-control-lg" placeholder="Сообщение" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
-                        <i class="bi bi-send"></i> Отправить
-                    </button>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill py-3">Отправить</button>
                 </form>
             </div>
         </div>

@@ -1,7 +1,58 @@
+:root {
+    --bg-start: #cfe7fa;
+    --bg-end: #e0f0ff;
+    --primary: #0a4c6e;
+    --primary-light: #2f7ea0;
+    --accent: #ffbc6e;
+    --text-dark: #022b3b;
+    --card-bg: rgba(255,255,255,0.92);
+}
+
 body {
     font-family: 'Inter', sans-serif;
-    background: #e0eaf5;
-    background-image: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.2) 2%, transparent 2.5%);
-    background-size: 28px 28px;
-    color: #1E2A32;
+    background: linear-gradient(145deg, var(--bg-start), var(--bg-end));
+    color: var(--text-dark);
+}
+
+.navbar {
+    background: var(--primary) !important;
+    backdrop-filter: blur(4px);
+    border-bottom: 2px solid var(--accent);
+}
+.navbar-brand {
+    color: white !important;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.2);
+}
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 32px;
+}
+.card-img-top {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: contain;
+    padding: 16px;
+    background: #fefefe;
+}
+.card-title {
+    color: var(--primary);
+    font-weight: 800;
+}
+.btn-success {
+    background: var(--accent);
+    color: var(--primary);
+    border: none;
+    font-weight: 700;
+}
+.btn-success:hover {
+    background: #ffa847;
+    color: #022b3b;
+}
+footer {
+    background: var(--primary);
+    color: white;
+    margin-top: 60px;
 }
