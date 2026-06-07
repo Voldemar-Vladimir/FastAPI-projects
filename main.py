@@ -1,5 +1,5 @@
 import uvicorn
-import datetime
+from datetime import datetime, date, timedelta, timezone
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -11,7 +11,20 @@ from pydantic import BaseModel, Field
 from mako.lookup import TemplateLookup
 import requests
 from Admin_Info import secret
+from apscheduler.schedulers.background import BackgroundScheduler
 
+def clean_expired_bookings():
+    db = SessionLocal()
+    db.query(Booking).filter(
+        Booking.payment_status == 'pending',
+        Booking.expires_at < datetime.utcnow()
+    ).delete()
+    db.commit()
+    db.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(clean_expired_bookings, 'interval', hours=1)
+scheduler.start()
 secret_key = secret()
 
 security = HTTPBasic()
@@ -43,11 +56,34 @@ def root(request: Request):
     template = template_lookup.get_template("index.html")
     return HTMLResponse(template.render(homes=homes))
 
+def is_home_available(home_id: int, check_in: date, check_out: date, db: Session):
+    overlapping = db.query(Booking).filter(
+Booking.home_id == home_id,
+        Booking.status == 'confirmed',
+        Booking.check_in < check_out,
+        Booking.check_out > check_in
+    ).first()
+    return overlapping is None
+
+@app.get("/api/blocked_dates/{home_id}")
+def get_blocked_dates(home_id: int, db: Session = Depends(get_db)):
+    bookings = db.query(Booking).filter(
+        Booking.home_id == home_id,
+        Booking.status == 'confirmed'
+    ).all()
+    blocked = []
+    for b in bookings:
+        delta = (b.check_out - b.check_in).days
+        for i in range(delta):
+            date_str = (b.check_in + timedelta(days=i)).isoformat()
+            blocked.append(date_str)
+    return {"blocked": blocked}
+
 @app.post("/booking")
 def create_form(
     home_id: int = Form(...),
-    check_in: datetime.date = Form(...),
-    check_out: datetime.date = Form(...),
+    check_in: str = Form(...),
+    check_out: str = Form(...),
     name: str = Form(...),
     phone: str = Form(...),
     email: str = Form(""),
@@ -56,7 +92,16 @@ def create_form(
     peoples: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    days = (check_out - check_in).days
+    try:
+        check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
+        check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
+    except ValueError:
+        raise HTTPException(400, "Неверный формат даты")
+
+    if not is_home_available(home_id, check_in_date, check_out_date, db):
+        raise HTTPException(400, "Эти дни уже забронированы")
+
+    days = (check_out_date - check_in_date).days
     if days <= 0:
         raise HTTPException(400, "Дата выезда должна быть позже даты заезда")
     if days < 2:
@@ -74,21 +119,49 @@ def create_form(
 
     booking = Booking(
         home_id=home_id,
-        check_in=check_in,
-        check_out=check_out,
+        check_in=check_in_date,
+        check_out=check_out_date,
         name=name,
         phone=phone,
         email=email,
         mini_bar=mini_bar,
         transfer=transfer,
         total_price=price,
-        peoples=peoples
+        peoples=peoples,
+        payment_status='pending',
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
     )
     db.add(booking)
     db.commit()
     message = f"Новый заказ!\nДом №{home_id}\nИмя: {name}\nТелефон: {phone}\nДаты: {check_in} – {check_out}\nГостей: {peoples}\nСумма: {price}₽"
     RostovHomes(message)
     return RedirectResponse(url=f"/success?booking_id={booking.id}", status_code=303)
+
+@app.post("/webhook/yookassa")
+async def yookassa_webhook(request: Request, db: Session = Depends(get_db)):
+    body = await request.json()
+    if body['event'] == 'payment.succeeded':
+        payment_id = body['object']['id']
+        booking = db.query(Booking).filter_by(payment_id=payment_id).first()
+        if booking:
+            booking.status = 'confirmed'
+            booking.payment_status = 'paid'
+            db.commit()
+            RostovHomes(f"✅ Оплачено! Бронь #{booking.id} подтверждена.")
+    return {"ok": True}
+
+@app.get("/fake_pay/{booking_id}")
+def fake_pay(booking_id: int, db: Session = Depends(get_db)):
+    booking = db.query(Booking).get(booking_id)
+    if not booking:
+        raise HTTPException(404, "Бронь не найдена")
+    if booking.status == 'confirmed':
+        return RedirectResponse(url=f"/success?booking_id={booking_id}")
+    booking.status = 'confirmed'
+    booking.payment_status = 'paid'
+    db.commit()
+    RostovHomes(f"✅ Фейк-оплата! Бронь #{booking.id} подтверждена.")
+    return RedirectResponse(url=f"/success?booking_id={booking_id}")
 
 @app.get("/success")
 def success(booking_id: int = None, db: Session = Depends(get_db)):
@@ -118,8 +191,11 @@ def RostovHomes(message):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     data = {"chat_id": chat_id, "text": message}
     try:
-        requests.post(url, json=data, timeout=5)
-    except:pass
+        response = requests.post(url, json=data, timeout=15)
+        response.raise_for_status()  # выбросит исключение при статусе 4xx/5xx
+        print("Telegram отправлено:", response.json())
+    except Exception as e:
+        print(f"Ошибка отправки в Telegram: {e}")
 
 @app.get("/admin/{password}")
 def admin(password,db: Session = Depends(get_db)):
